@@ -19,6 +19,24 @@ pub use cstr_core as cstr;
 
 pub mod error;
 
+pub const BOARD: &'static str = match {
+    match cstr::CStr::from_bytes_with_nul(riot_sys::RIOT_BOARD) {
+        Ok(s) => s,
+        _ => panic!("Board names are null-terminated C strings"),
+    }
+
+    // Preferred would be
+    //     .expect("Board names are null-terminated C strings")
+}
+.to_str()
+{
+    Ok(x) => x,
+    // Preferred would be
+    // .expect("Board names should be ASCII");
+    // but feature(const_result) seems not to cover that yet
+    _ => panic!("Board names should be ASCII"),
+};
+
 /// Name of the RIOT board that is being used
 ///
 /// Development:
@@ -26,11 +44,9 @@ pub mod error;
 /// Once this can be const, it'll be deprecated in favor of a pub const &'static str. That'll also
 /// force the compiler to remove all the exceptions at build time (currently it does not, even with
 /// aggressive optimization).
+#[deprecated(note = "Access BOARD instead")]
 pub fn board() -> &'static str {
-    cstr::CStr::from_bytes_with_nul(riot_sys::RIOT_BOARD)
-        .expect("Board names are null-terminated C strings")
-        .to_str()
-        .expect("Board names should be ASCII")
+    BOARD
 }
 
 /// Cast pointers around before passing them in to functions; this is sometimes needed when a
